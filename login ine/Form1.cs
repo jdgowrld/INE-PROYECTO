@@ -29,8 +29,8 @@ namespace login_ine
         private void btnLogin_Click(object sender, EventArgs e)
         {
             // Se obtiene el nombre de usuario y la contraseña ingresados por el usuario.
-            string usuario = txtadmin.Text;
-            string contrasena = txtContraseña.Text;
+            string usuario = txtUsuario.Text;
+            string contrasena = txtContrasena.Text;
 
             // Llamamos a la función para autenticar al usuario.
             if (AutenticarUsuario(usuario, contrasena))
@@ -92,6 +92,6 @@ namespace login_ine
             return resultado;
         }
 
-       
+        
     }
 }
