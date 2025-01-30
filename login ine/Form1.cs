@@ -19,7 +19,7 @@ namespace login_ine
         // Database: Nombre de la base de datos que estás usando (ine_inventario).
         // User Id: Usuario para la conexión (root).
         // Password: Contraseña del usuario.
-        string cadenaConexion = "Server=localhost;Port=3306;Database=ine_inventario;User Id=root;Password=21082007jd;";
+        string cadenaConexion = "Server=localhost;Port=3306;Database=ine;User Id=root;Password=21082007jd;";
 
         public Form1()
         {
