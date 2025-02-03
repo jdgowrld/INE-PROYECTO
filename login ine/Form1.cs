@@ -35,8 +35,15 @@ namespace login_ine
             // Llamamos a la función para autenticar al usuario.
             if (AutenticarUsuario(usuario, contrasena))
             {
-                // Si la autenticación es exitosa, mostramos un mensaje.
-                MessageBox.Show("Inicio de sesión exitoso", "Login");
+                // Oculta el LoginForm
+                this.Hide();
+
+                // Crea y muestra el MainForm
+                MainForm mainForm = new MainForm();
+                mainForm.ShowDialog(); // Muestra el MainForm de forma modal
+
+                // Cierra la aplicación cuando MainForm se cierra
+                this.Close();
             }
             else
             {
@@ -44,6 +51,7 @@ namespace login_ine
                 MessageBox.Show("Usuario o contraseña incorrectos", "Error");
             }
         }
+
 
         // Método para autenticar al usuario en la base de datos.
         // Recibe el nombre de usuario y la contraseña ingresados por el usuario.
