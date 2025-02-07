@@ -44,6 +44,9 @@
             this.txtZore = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.Entradas = new System.Windows.Forms.TabPage();
+            this.CodigoArticulo = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.DescripcionArticulo = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.CantidadArticulo = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tabControl1.SuspendLayout();
             this.Salidas.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvArticulos)).BeginInit();
@@ -87,6 +90,10 @@
             // dgvArticulos
             // 
             this.dgvArticulos.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvArticulos.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.CodigoArticulo,
+            this.DescripcionArticulo,
+            this.CantidadArticulo});
             this.dgvArticulos.Location = new System.Drawing.Point(273, 6);
             this.dgvArticulos.Name = "dgvArticulos";
             this.dgvArticulos.RowHeadersWidth = 51;
@@ -206,6 +213,27 @@
             this.Entradas.Text = "Entradas";
             this.Entradas.UseVisualStyleBackColor = true;
             // 
+            // CodigoArticulo
+            // 
+            this.CodigoArticulo.HeaderText = "Código";
+            this.CodigoArticulo.MinimumWidth = 6;
+            this.CodigoArticulo.Name = "CodigoArticulo";
+            this.CodigoArticulo.Width = 125;
+            // 
+            // DescripcionArticulo
+            // 
+            this.DescripcionArticulo.HeaderText = "Descripción";
+            this.DescripcionArticulo.MinimumWidth = 6;
+            this.DescripcionArticulo.Name = "DescripcionArticulo";
+            this.DescripcionArticulo.Width = 125;
+            // 
+            // CantidadArticulo
+            // 
+            this.CantidadArticulo.HeaderText = "Cantidad";
+            this.CantidadArticulo.MinimumWidth = 6;
+            this.CantidadArticulo.Name = "CantidadArticulo";
+            this.CantidadArticulo.Width = 125;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -241,5 +269,8 @@
         private System.Windows.Forms.TextBox txtZore;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button btnImprimir;
+        private System.Windows.Forms.DataGridViewTextBoxColumn CodigoArticulo;
+        private System.Windows.Forms.DataGridViewTextBoxColumn DescripcionArticulo;
+        private System.Windows.Forms.DataGridViewTextBoxColumn CantidadArticulo;
     }
 }

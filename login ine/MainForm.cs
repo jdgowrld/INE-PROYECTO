@@ -16,59 +16,48 @@ namespace login_ine
         public MainForm()
         {
             InitializeComponent();
-        }      
-public static class ConexionMySQL
-    {
-        private static string conexionString = "Server=localhost;Port=3306;Database=ine;User Id=root;Password=21082007jd;";
+        }
 
-        // Método para obtener la descripción del artículo
-        public static string ObtenerDescripcionDesdeBD(string codigo)
+        public static class ConexionMySQL
         {
-            string descripcion = string.Empty;
+            private static string conexionString = "Server=localhost;Port=3306;Database=ine;User Id=root;Password=21082007jd;";
 
-            try
+            public static string ObtenerDescripcionDesdeBD(string codigo)
             {
-                using (MySqlConnection conn = new MySqlConnection(conexionString))
+                string descripcion = string.Empty;
+                try
                 {
-                    conn.Open();
-                    string query = "SELECT descripcion FROM articulos WHERE codigo = @codigo";  // Ajusta según tu tabla
-                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                    using (MySqlConnection conn = new MySqlConnection(conexionString))
                     {
-                        cmd.Parameters.AddWithValue("@codigo", codigo);
-                        using (MySqlDataReader reader = cmd.ExecuteReader())
+                        conn.Open();
+                        string query = "SELECT descripcion FROM folio WHERE codigo = @codigo";
+                        using (MySqlCommand cmd = new MySqlCommand(query, conn))
                         {
-                            if (reader.Read())
+                            cmd.Parameters.AddWithValue("@codigo", codigo);
+                            using (MySqlDataReader reader = cmd.ExecuteReader())
                             {
-                                descripcion = reader["descripcion"].ToString();
+                                if (reader.Read())
+                                {
+                                    descripcion = reader["descripcion"].ToString();
+                                }
                             }
                         }
                     }
                 }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Error al conectar con la base de datos: " + ex.Message);
+                }
+                return descripcion;
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Error al conectar con la base de datos: " + ex.Message);
-            }
-
-            return descripcion;
         }
-}
-
-
-        private void MainForm_Load(object sender, EventArgs e)
-        {
-            dgvArticulos.Columns.Add("Codigo", "Código");
-            dgvArticulos.Columns.Add("Descripcion", "Descripción");
-            dgvArticulos.Columns.Add("Cantidad", "Cantidad");
-        }
-
 
         private void txtZore_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
             {
-                txtAre.Focus();  // Cambia el foco al siguiente campo
-                e.SuppressKeyPress = true; // Evita que el Enter haga un sonido o agregue saltos de línea
+                txtAre.Focus();
+                e.SuppressKeyPress = true;
             }
         }
 
@@ -94,37 +83,14 @@ public static class ConexionMySQL
         {
             if (e.KeyCode == Keys.Enter)
             {
-                string codigo = txtArticulos.Text.Trim();
-
-                if (!string.IsNullOrEmpty(codigo))
-                {
-                    // Aquí puedes conectar con MySQL y obtener la descripción del artículo
-                    string descripcion = ObtenerDescripcionDesdeBD(codigo); // Simulación de función
-                    int cantidad = 1;
-
-                    // Agregar al DataGridView
-                    dgvArticulos.Rows.Add(codigo, descripcion, cantidad);
-
-                    // Limpiar el campo para el siguiente escaneo
-                    txtArticulos.Clear();
-                }
-
+                AgregarArticulo();
                 e.SuppressKeyPress = true;
             }
         }
 
         private void btnAgregar_Click(object sender, EventArgs e)
         {
-            string codigo = txtArticulos.Text.Trim();
-
-            if (!string.IsNullOrEmpty(codigo))
-            {
-                string descripcion = ObtenerDescripcionDesdeBD(codigo);
-                int cantidad = 1;
-
-                dgvArticulos.Rows.Add(codigo, descripcion, cantidad);
-                txtArticulos.Clear();
-            }
+            AgregarArticulo();
         }
 
         private void btnLimpiar_Click(object sender, EventArgs e)
@@ -134,6 +100,28 @@ public static class ConexionMySQL
             txtNombre.Clear();
             txtArticulos.Clear();
             dgvArticulos.Rows.Clear();
+        }
+
+        private void AgregarArticulo()
+        {
+            string codigo = txtArticulos.Text.Trim();
+
+            if (string.IsNullOrEmpty(codigo))
+            {
+                MessageBox.Show("Ingrese un código de artículo.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            string descripcion = ConexionMySQL.ObtenerDescripcionDesdeBD(codigo);
+
+            if (string.IsNullOrEmpty(descripcion))
+            {
+                MessageBox.Show("Artículo no encontrado en la base de datos.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            dgvArticulos.Rows.Add(new object[] { codigo, descripcion, 1 });
+            txtArticulos.Clear();
+        }
     }
-}
 }
