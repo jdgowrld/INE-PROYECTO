@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Text.RegularExpressions;
 
 namespace login_ine
 {
@@ -21,7 +22,6 @@ namespace login_ine
         public static class ConexionMySQL
         {
             private static string conexionString = "Server=localhost;Port=3306;Database=ine;User Id=root;Password=21082007jd;";
-
             public static string ObtenerDescripcionDesdeBD(string codigo)
             {
                 string descripcion = string.Empty;
@@ -30,7 +30,12 @@ namespace login_ine
                     using (MySqlConnection conn = new MySqlConnection(conexionString))
                     {
                         conn.Open();
-                        string query = "SELECT descripcion FROM folio WHERE codigo = @codigo";
+                        string query = @"
+                SELECT me.material_electoral 
+                FROM material_electoral me
+                JOIN folio f ON me.id_material_electoral = f.id_material_electoral
+                WHERE f.codigo_articulo = @codigo";
+
                         using (MySqlCommand cmd = new MySqlCommand(query, conn))
                         {
                             cmd.Parameters.AddWithValue("@codigo", codigo);
@@ -38,7 +43,7 @@ namespace login_ine
                             {
                                 if (reader.Read())
                                 {
-                                    descripcion = reader["descripcion"].ToString();
+                                    descripcion = reader["material_electoral"].ToString();
                                 }
                             }
                         }
@@ -50,6 +55,7 @@ namespace login_ine
                 }
                 return descripcion;
             }
+
         }
 
         private void txtZore_KeyDown(object sender, KeyEventArgs e)
@@ -91,6 +97,8 @@ namespace login_ine
         private void btnAgregar_Click(object sender, EventArgs e)
         {
             AgregarArticulo();
+            GuardarDatosGenerales();
+
         }
 
         private void btnLimpiar_Click(object sender, EventArgs e)
@@ -102,6 +110,26 @@ namespace login_ine
             dgvArticulos.Rows.Clear();
         }
 
+        private void GuardarDatosGenerales()
+        {
+            string zore = txtZore.Text.Trim();
+            string are = txtAre.Text.Trim();
+            string nombre = txtNombre.Text.Trim();
+            string fecha = DateTime.Now.ToString("dd/MM/yyyy HH:mm"); // Formato de fecha
+
+            if (string.IsNullOrEmpty(zore) || string.IsNullOrEmpty(are) || string.IsNullOrEmpty(nombre))
+            {
+                MessageBox.Show("Faltan datos. Asegúrese de llenar ZORE, ARE y Nombre.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // Limpiar para que solo haya una fila con estos datos
+            dgvDatosGenerales.Rows.Clear();
+            dgvDatosGenerales.Rows.Add(new object[] { zore, are, nombre, fecha });
+        }
+
+
+
         private void AgregarArticulo()
         {
             string codigo = txtArticulos.Text.Trim();
@@ -112,16 +140,23 @@ namespace login_ine
                 return;
             }
 
-            string descripcion = ConexionMySQL.ObtenerDescripcionDesdeBD(codigo);
+            Match match = Regex.Match(codigo, @"^\D*(\d{4})(\w{6})(\d{4})\D*$");
 
-            if (string.IsNullOrEmpty(descripcion))
+            if (match.Success)
             {
-                MessageBox.Show("Artículo no encontrado en la base de datos.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
+                string cime = match.Groups[2].Value;
+                string numero = match.Groups[3].Value;
 
-            dgvArticulos.Rows.Add(new object[] { codigo, descripcion, 1 });
-            txtArticulos.Clear();
+                dgvArticulos.Rows.Add(new object[] { codigo, cime, numero });
+
+                txtArticulos.Clear();
+            }
+            else
+            {
+                MessageBox.Show("Formato de código incorrecto. Intente nuevamente.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
+
+
     }
 }
