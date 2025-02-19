@@ -96,10 +96,20 @@ namespace login_ine
 
         private void btnAgregar_Click(object sender, EventArgs e)
         {
-            AgregarArticulo();
-            GuardarDatosGenerales();
+            if (dgvDatosGenerales.Rows.Count == 0) // Si el DataGridView está vacío, hacer la validación
+            {
+                if (string.IsNullOrEmpty(txtZore.Text.Trim()) || string.IsNullOrEmpty(txtAre.Text.Trim()) || string.IsNullOrEmpty(txtNombre.Text.Trim()))
+                {
+                    MessageBox.Show("Faltan datos. Asegúrese de llenar ZORE, ARE y Nombre.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
 
+                GuardarDatosGenerales();
+            }
+
+            AgregarArticulo(); // Ahora sí agregamos el artículo sin problemas
         }
+
 
         private void btnLimpiar_Click(object sender, EventArgs e)
         {
@@ -115,7 +125,7 @@ namespace login_ine
             string zore = txtZore.Text.Trim();
             string are = txtAre.Text.Trim();
             string nombre = txtNombre.Text.Trim();
-            string fecha = DateTime.Now.ToString("dd/MM/yyyy HH:mm"); // Formato de fecha
+            string fecha = DateTime.Now.ToString("dd/MM/yyyy"); // Formato de fecha
 
             if (string.IsNullOrEmpty(zore) || string.IsNullOrEmpty(are) || string.IsNullOrEmpty(nombre))
             {
@@ -128,7 +138,7 @@ namespace login_ine
             dgvDatosGenerales.Rows.Add(new object[] { zore, are, nombre, fecha });
         }
 
-
+       
 
         private void AgregarArticulo()
         {
@@ -157,6 +167,10 @@ namespace login_ine
             }
         }
 
+       
 
+       
+
+      
     }
 }
