@@ -22,7 +22,7 @@ namespace login_ine
         public static class ConexionMySQL
         {
             private static string conexionString = "Server=localhost;Port=3306;Database=ine;User Id=root;Password=21082007jd;";
-            public static string ObtenerDescripcionDesdeBD(string codigo)
+            public static string ObtenerDescripcionDesdeBD(string cime)
             {
                 string descripcion = string.Empty;
                 try
@@ -31,14 +31,13 @@ namespace login_ine
                     {
                         conn.Open();
                         string query = @"
-                SELECT me.material_electoral 
-                FROM material_electoral me
-                JOIN folio f ON me.id_material_electoral = f.id_material_electoral
-                WHERE f.codigo_articulo = @codigo";
+            SELECT material_electoral 
+            FROM material_electoral 
+            WHERE CIME = @cime"; // Aquí buscamos por CIME incluyendo espacios
 
                         using (MySqlCommand cmd = new MySqlCommand(query, conn))
                         {
-                            cmd.Parameters.AddWithValue("@codigo", codigo);
+                            cmd.Parameters.AddWithValue("@cime", cime);
                             using (MySqlDataReader reader = cmd.ExecuteReader())
                             {
                                 if (reader.Read())
@@ -55,6 +54,7 @@ namespace login_ine
                 }
                 return descripcion;
             }
+
 
         }
 
@@ -96,20 +96,9 @@ namespace login_ine
 
         private void btnAgregar_Click(object sender, EventArgs e)
         {
-            if (dgvDatosGenerales.Rows.Count == 0) // Si el DataGridView está vacío, hacer la validación
-            {
-                if (string.IsNullOrEmpty(txtZore.Text.Trim()) || string.IsNullOrEmpty(txtAre.Text.Trim()) || string.IsNullOrEmpty(txtNombre.Text.Trim()))
-                {
-                    MessageBox.Show("Faltan datos. Asegúrese de llenar ZORE, ARE y Nombre.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-
-                GuardarDatosGenerales();
-            }
-
-            AgregarArticulo(); // Ahora sí agregamos el artículo sin problemas
+            GuardarDatosGenerales(); // Se encarga de validar y limpiar los campos
+            AgregarArticulo(); // Agrega el artículo
         }
-
 
         private void btnLimpiar_Click(object sender, EventArgs e)
         {
@@ -125,20 +114,19 @@ namespace login_ine
             string zore = txtZore.Text.Trim();
             string are = txtAre.Text.Trim();
             string nombre = txtNombre.Text.Trim();
-            string fecha = DateTime.Now.ToString("dd/MM/yyyy"); // Formato de fecha
+            string fecha = DateTime.Now.ToString("dd/MM/yyyy");
 
             if (string.IsNullOrEmpty(zore) || string.IsNullOrEmpty(are) || string.IsNullOrEmpty(nombre))
             {
                 MessageBox.Show("Faltan datos. Asegúrese de llenar ZORE, ARE y Nombre.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
-
-            // Limpiar para que solo haya una fila con estos datos
             dgvDatosGenerales.Rows.Clear();
             dgvDatosGenerales.Rows.Add(new object[] { zore, are, nombre, fecha });
         }
 
-       
+
+
 
         private void AgregarArticulo()
         {
@@ -150,14 +138,20 @@ namespace login_ine
                 return;
             }
 
-            Match match = Regex.Match(codigo, @"^\D*(\d{4})(\w{6})(\d{4})\D*$");
+            // Expresión regular adaptada para incluir espacios en el CIME
+            Match match = Regex.Match(codigo, @"^\D*(\d{2}\s\w\s\w\s\d{2})\D*$");
 
             if (match.Success)
             {
-                string cime = match.Groups[2].Value;
-                string numero = match.Groups[3].Value;
+                string cime = match.Groups[1].Value; // Captura completa del CIME con espacios
+                string descripcion = ConexionMySQL.ObtenerDescripcionDesdeBD(cime);
 
-                dgvArticulos.Rows.Add(new object[] { codigo, cime, numero });
+                if (string.IsNullOrEmpty(descripcion))
+                {
+                    descripcion = "No encontrado";
+                }
+
+                dgvArticulos.Rows.Add(new object[] { codigo, cime, descripcion });
 
                 txtArticulos.Clear();
             }
@@ -167,10 +161,11 @@ namespace login_ine
             }
         }
 
-       
 
-       
 
-      
+
+
+
+
     }
 }
