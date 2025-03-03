@@ -22,22 +22,26 @@ namespace login_ine
         public static class ConexionMySQL
         {
             private static string conexionString = "Server=localhost;Port=3306;Database=ine;User Id=root;Password=21082007jd;";
+
             public static string ObtenerDescripcionDesdeBD(string cime)
             {
                 string descripcion = string.Empty;
+
                 try
                 {
                     using (MySqlConnection conn = new MySqlConnection(conexionString))
                     {
                         conn.Open();
-                        string query = @"
-            SELECT material_electoral 
-            FROM material_electoral 
-            WHERE CIME = @cime"; // Aquí buscamos por CIME incluyendo espacios
+
+                        // 🔍 Debug: Muestra el CIME que se va a buscar
+                        MessageBox.Show("Buscando en BD CIME: '" + cime + "'", "Debug");
+
+                        string query = "SELECT material_electoral FROM material_electoral WHERE cime = @cime";
 
                         using (MySqlCommand cmd = new MySqlCommand(query, conn))
                         {
                             cmd.Parameters.AddWithValue("@cime", cime);
+
                             using (MySqlDataReader reader = cmd.ExecuteReader())
                             {
                                 if (reader.Read())
@@ -52,10 +56,22 @@ namespace login_ine
                 {
                     MessageBox.Show("Error al conectar con la base de datos: " + ex.Message);
                 }
+
                 return descripcion;
             }
 
 
+            public static string FormatearCIME(string cime)
+            {
+                cime = cime.Trim();
+
+                if (cime.Length == 6) // Ajusta esto según la estructura real del CIME
+                {
+                    return cime.Substring(0, 2) + " " + cime.Substring(2, 1) + " " + cime.Substring(3, 1) + " " + cime.Substring(4);
+                }
+
+                return cime; // Si no tiene la longitud correcta, devolverlo como está
+            }
         }
 
         private void txtZore_KeyDown(object sender, KeyEventArgs e)
@@ -125,9 +141,6 @@ namespace login_ine
             dgvDatosGenerales.Rows.Add(new object[] { zore, are, nombre, fecha });
         }
 
-
-
-
         private void AgregarArticulo()
         {
             string codigo = txtArticulos.Text.Trim();
@@ -138,34 +151,38 @@ namespace login_ine
                 return;
             }
 
-            // Expresión regular adaptada para incluir espacios en el CIME
-            Match match = Regex.Match(codigo, @"^\D*(\d{2}\s\w\s\w\s\d{2})\D*$");
+            Match match = Regex.Match(codigo, @"^\D*(\d{4})([\w\s]{6,10})(\d{4})\D*$");
 
             if (match.Success)
             {
-                string cime = match.Groups[1].Value; // Captura completa del CIME con espacios
-                string descripcion = ConexionMySQL.ObtenerDescripcionDesdeBD(cime);
+                string cime = match.Groups[2].Value.Trim(); // Elimina espacios innecesarios
 
-                if (string.IsNullOrEmpty(descripcion))
+                // 🔍 Formateamos CIME antes de enviarlo a la base de datos
+                string cimeFormateado = ConexionMySQL.FormatearCIME(cime);
+                MessageBox.Show("CIME extraído y formateado: '" + cimeFormateado + "'", "Debug");
+
+                string numero = match.Groups[3].Value;
+
+                // 🔍 Obtén la descripción desde la BD
+                string material = ConexionMySQL.ObtenerDescripcionDesdeBD(cimeFormateado);
+                MessageBox.Show("Material obtenido: '" + material + "'", "Debug");
+
+                if (!string.IsNullOrEmpty(material))
                 {
-                    descripcion = "No encontrado";
+                    // ✅ Agregar al DataGridView SOLO si encuentra el material
+                    dgvArticulos.Rows.Add(new object[] { codigo, cimeFormateado, numero, material });
+                    txtArticulos.Clear();
                 }
-
-                dgvArticulos.Rows.Add(new object[] { codigo, cime, descripcion });
-
-                txtArticulos.Clear();
+                else
+                {
+                    MessageBox.Show("No se encontró el artículo en la base de datos.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
             else
             {
                 MessageBox.Show("Formato de código incorrecto. Intente nuevamente.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
-
-
-
-
-
 
     }
 }
