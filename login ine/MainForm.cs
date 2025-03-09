@@ -244,6 +244,149 @@ namespace login_ine
             }
         }
 
-      
+        private void btnGuardarFolio_Click(object sender, EventArgs e)
+        {
+            int nuevoFolio = ObtenerNuevoFolio();
+            int idEmpleado = ObtenerIdEmpleado(txtAre.Text); // Obtener el id_empleado usando el ARE
+
+            if (idEmpleado == -1)
+            {
+                MessageBox.Show("Error: No se encontró el empleado con el ARE proporcionado.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            foreach (DataGridViewRow row in dgvArticulos.Rows)
+            {
+                if (!row.IsNewRow)
+                {
+                    string cime = row.Cells["CIME"].Value?.ToString();
+                    int idMaterialElectoral = ObtenerIdMaterialElectoral(cime);
+                    string codigoArticulo = row.Cells["Código"].Value?.ToString();
+                    string numeralMaterial = row.Cells["Número"].Value?.ToString();
+
+                    if (idMaterialElectoral == -1)
+                    {
+                        MessageBox.Show($"Error: No se encontró material electoral con CIME '{cime}'.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        continue;
+                    }
+
+                    GuardarFolioEnBD(nuevoFolio, idMaterialElectoral, codigoArticulo, idEmpleado, numeralMaterial);
+                }
+            }
+
+            MessageBox.Show("Datos guardados correctamente en la tabla 'folio'.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private int ObtenerNuevoFolio()
+        {
+            int nuevoFolio = 1;
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection("Server=localhost;Port=3306;Database=ine;User Id=root;Password=21082007jd;"))
+                {
+                    conn.Open();
+                    string query = "SELECT MAX(id_folio) FROM folio";
+
+                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                    {
+                        object result = cmd.ExecuteScalar();
+                        if (result != DBNull.Value && result != null)
+                        {
+                            nuevoFolio = Convert.ToInt32(result) + 1;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al obtener el folio: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            return nuevoFolio;
+        }
+
+        private int ObtenerIdMaterialElectoral(string cime)
+        {
+            int idMaterialElectoral = -1;
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection("Server=localhost;Port=3306;Database=ine;User Id=root;Password=21082007jd;"))
+                {
+                    conn.Open();
+                    string query = "SELECT id_material_electoral FROM material_electoral WHERE cime = @cime";
+
+                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@cime", cime);
+                        object result = cmd.ExecuteScalar();
+                        if (result != DBNull.Value && result != null)
+                        {
+                            idMaterialElectoral = Convert.ToInt32(result);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al obtener el ID del material electoral: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            return idMaterialElectoral;
+        }
+
+        private int ObtenerIdEmpleado(string are)
+        {
+            int idEmpleado = -1;
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection("Server=localhost;Port=3306;Database=ine;User Id=root;Password=21082007jd;"))
+                {
+                    conn.Open();
+                    string query = "SELECT id_empleados FROM empleados WHERE are = @are";
+
+                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@are", are);
+                        object result = cmd.ExecuteScalar();
+                        if (result != DBNull.Value && result != null)
+                        {
+                            idEmpleado = Convert.ToInt32(result);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al obtener el ID del empleado: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            return idEmpleado;
+        }
+
+        private void GuardarFolioEnBD(int idFolio, int idMaterialElectoral, string codigoArticulo, int idEmpleado, string numeralMaterial)
+        {
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection("Server=localhost;Port=3306;Database=ine;User Id=root;Password=21082007jd;"))
+                {
+                    conn.Open();
+                    string query = "INSERT INTO folio (id_folio, id_material_electoral, codigo_articulo, id_empleados, numeral_material_electoral) " +
+                                   "VALUES (@idFolio, @idMaterial, @codigo, @idEmpleado, @numeral)";
+
+                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@idFolio", idFolio);
+                        cmd.Parameters.AddWithValue("@idMaterial", idMaterialElectoral);
+                        cmd.Parameters.AddWithValue("@codigo", codigoArticulo);
+                        cmd.Parameters.AddWithValue("@idEmpleado", idEmpleado);
+                        cmd.Parameters.AddWithValue("@numeral", numeralMaterial);
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al guardar en la base de datos: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+
     }
 }
