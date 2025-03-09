@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Text.RegularExpressions;
+using System.Drawing.Printing;
 
 namespace login_ine
 {
@@ -184,5 +185,65 @@ namespace login_ine
             }
         }
 
+        private void PrintDocument_PrintPage(object sender, PrintPageEventArgs e)
+        {
+            Font font = new Font("Arial", 10);
+            float yPos = 50;
+            int xPos = 50;
+
+            e.Graphics.DrawString("Datos Generales", new Font("Arial", 12, FontStyle.Bold), Brushes.Black, xPos, yPos);
+            yPos += 30;
+
+            // Imprimir dgvDatosGenerales
+            foreach (DataGridViewRow row in dgvDatosGenerales.Rows)
+            {
+                if (!row.IsNewRow)
+                {
+                    string line = "";
+                    foreach (DataGridViewCell cell in row.Cells)
+                    {
+                        line += cell.Value?.ToString() + "   ";
+                    }
+                    e.Graphics.DrawString(line, font, Brushes.Black, xPos, yPos);
+                    yPos += 20;
+                }
+            }
+
+            yPos += 30;
+            e.Graphics.DrawString("Artículos", new Font("Arial", 12, FontStyle.Bold), Brushes.Black, xPos, yPos);
+            yPos += 30;
+
+            // Imprimir dgvArticulos
+            foreach (DataGridViewRow row in dgvArticulos.Rows)
+            {
+                if (!row.IsNewRow)
+                {
+                    string line = "";
+                    foreach (DataGridViewCell cell in row.Cells)
+                    {
+                        line += cell.Value?.ToString() + "   ";
+                    }
+                    e.Graphics.DrawString(line, font, Brushes.Black, xPos, yPos);
+                    yPos += 20;
+                }
+            }
+        }
+
+        private void btnImprimir_Click(object sender, EventArgs e)
+        {
+            PrintDialog printDialog = new PrintDialog();
+            PrintDocument printDocument = new PrintDocument();
+
+            printDocument.PrintPage += new PrintPageEventHandler(PrintDocument_PrintPage);
+
+            printDialog.Document = printDocument;
+
+            if (printDialog.ShowDialog() == DialogResult.OK)
+            {
+                printDocument.Print();
+            }
+        }
+
+      
     }
 }
