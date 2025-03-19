@@ -35,7 +35,7 @@ namespace login_ine
                         conn.Open();
 
                         // 🔍 Debug: Muestra el CIME que se va a buscar
-                        MessageBox.Show("Buscando en BD CIME: '" + cime + "'", "Debug");
+                       
 
                         string query = "SELECT material_electoral FROM material_electoral WHERE cime = @cime";
 
@@ -148,7 +148,7 @@ namespace login_ine
 
             if (string.IsNullOrEmpty(codigo))
             {
-                MessageBox.Show("Ingrese un código de artículo.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                
                 return;
             }
 
@@ -160,13 +160,13 @@ namespace login_ine
 
                 // 🔍 Formateamos CIME antes de enviarlo a la base de datos
                 string cimeFormateado = ConexionMySQL.FormatearCIME(cime);
-                MessageBox.Show("CIME extraído y formateado: '" + cimeFormateado + "'", "Debug");
+                
 
                 string numero = match.Groups[3].Value;
 
                 // 🔍 Obtén la descripción desde la BD
                 string material = ConexionMySQL.ObtenerDescripcionDesdeBD(cimeFormateado);
-                MessageBox.Show("Material obtenido: '" + material + "'", "Debug");
+               
 
                 if (!string.IsNullOrEmpty(material))
                 {
@@ -244,120 +244,122 @@ namespace login_ine
             }
         }
 
-        private void btnGuardarFolio_Click(object sender, EventArgs e)
+        private void btnGuardarFolio_Click_1(object sender, EventArgs e)
         {
-            int nuevoFolio = ObtenerNuevoFolio();
-            int idEmpleado = ObtenerIdEmpleado(txtAre.Text); // Obtener el id_empleado usando el ARE
-
-            if (idEmpleado == -1)
+            // Conexión a MySQL
+            string conexionString = "Server=localhost;Port=3306;Database=ine;User Id=root;Password=21082007jd;";
+            using (MySqlConnection conn = new MySqlConnection(conexionString))
             {
-                MessageBox.Show("Error: No se encontró el empleado con el ARE proporcionado.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
+                conn.Open();
 
-            foreach (DataGridViewRow row in dgvArticulos.Rows)
-            {
-                if (!row.IsNewRow)
+                // Obtener el siguiente ID de folio
+                string queryFolio = "SELECT IFNULL(MAX(id_folio), 0) + 1 FROM folio";
+                int nuevoFolio = 1;
+
+                using (MySqlCommand cmdFolio = new MySqlCommand(queryFolio, conn))
                 {
-                    string cime = row.Cells["CIME"].Value?.ToString();
-                    int idMaterialElectoral = ObtenerIdMaterialElectoral(cime);
-                    string codigoArticulo = row.Cells["Código"].Value?.ToString();
-                    string numeralMaterial = row.Cells["Número"].Value?.ToString();
-
-                    if (idMaterialElectoral == -1)
+                    object result = cmdFolio.ExecuteScalar();
+                    if (result != null)
                     {
-                        MessageBox.Show($"Error: No se encontró material electoral con CIME '{cime}'.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        continue;
-                    }
-
-                    GuardarFolioEnBD(nuevoFolio, idMaterialElectoral, codigoArticulo, idEmpleado, numeralMaterial);
-                }
-            }
-
-            MessageBox.Show("Datos guardados correctamente en la tabla 'folio'.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
-        }
-
-        private int ObtenerNuevoFolio()
-        {
-            int nuevoFolio = 1;
-            try
-            {
-                using (MySqlConnection conn = new MySqlConnection("Server=localhost;Port=3306;Database=ine;User Id=root;Password=21082007jd;"))
-                {
-                    conn.Open();
-                    string query = "SELECT MAX(id_folio) FROM folio";
-
-                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
-                    {
-                        object result = cmd.ExecuteScalar();
-                        if (result != DBNull.Value && result != null)
-                        {
-                            nuevoFolio = Convert.ToInt32(result) + 1;
-                        }
+                        nuevoFolio = Convert.ToInt32(result);
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Error al obtener el folio: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            return nuevoFolio;
-        }
 
-        private int ObtenerIdMaterialElectoral(string cime)
-        {
-            int idMaterialElectoral = -1;
-            try
-            {
-                using (MySqlConnection conn = new MySqlConnection("Server=localhost;Port=3306;Database=ine;User Id=root;Password=21082007jd;"))
+                MessageBox.Show("Nuevo Folio Asignado: " + nuevoFolio, "Debug");
+
+                foreach (DataGridViewRow row in dgvArticulos.Rows)
                 {
-                    conn.Open();
-                    string query = "SELECT id_material_electoral FROM material_electoral WHERE cime = @cime";
+                    if (row.Cells[0].Value == null) continue;
 
-                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                    string codigoArticulo = row.Cells[0].Value.ToString();
+                    string cime = row.Cells[1].Value.ToString();
+                    string numeroMaterial = row.Cells[2].Value.ToString();
+
+                    // 🔎 Verificar id_material_electoral
+                    string queryMaterial = "SELECT id_material_electoral FROM material_electoral WHERE cime = @cime";
+                    int idMaterialElectoral = -1;
+
+                    using (MySqlCommand cmdMaterial = new MySqlCommand(queryMaterial, conn))
                     {
-                        cmd.Parameters.AddWithValue("@cime", cime);
-                        object result = cmd.ExecuteScalar();
-                        if (result != DBNull.Value && result != null)
+                        cmdMaterial.Parameters.AddWithValue("@cime", cime);
+                        object result = cmdMaterial.ExecuteScalar();
+                        if (result != null)
                         {
                             idMaterialElectoral = Convert.ToInt32(result);
                         }
                     }
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Error al obtener el ID del material electoral: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            return idMaterialElectoral;
-        }
 
-        private int ObtenerIdEmpleado(string are)
-        {
-            int idEmpleado = -1;
-            try
-            {
-                using (MySqlConnection conn = new MySqlConnection("Server=localhost;Port=3306;Database=ine;User Id=root;Password=21082007jd;"))
-                {
-                    conn.Open();
-                    string query = "SELECT id_empleados FROM empleados WHERE are = @are";
-
-                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                    if (idMaterialElectoral == -1)
                     {
-                        cmd.Parameters.AddWithValue("@are", are);
-                        object result = cmd.ExecuteScalar();
-                        if (result != DBNull.Value && result != null)
+                        MessageBox.Show("No se encontró material para CIME: " + cime, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        continue;
+                    }
+
+                    MessageBox.Show("Material encontrado - ID: " + idMaterialElectoral, "Debug");
+
+                    // 🔎 Verificar si hay datos en la tabla empleados antes de hacer la consulta
+                    string verificarEmpleados = "SELECT COUNT(*) FROM empleados";
+                    int totalEmpleados = 0;
+
+                    using (MySqlCommand cmdVerificar = new MySqlCommand(verificarEmpleados, conn))
+                    {
+                        totalEmpleados = Convert.ToInt32(cmdVerificar.ExecuteScalar());
+                    }
+
+                    if (totalEmpleados == 0)
+                    {
+                        MessageBox.Show("No hay datos en la tabla 'empleados'. No se puede obtener el ID del empleado.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return; // Salir de la función para evitar errores
+                    }
+
+                    // 🔎 Verificar id_empleados asegurando mayúsculas/minúsculas
+                    string queryEmpleado = "SELECT id_empleados FROM empleados WHERE BINARY Are = @are";
+                    int idEmpleado = -1;
+
+                    using (MySqlCommand cmdEmpleado = new MySqlCommand(queryEmpleado, conn))
+                    {
+                        cmdEmpleado.Parameters.AddWithValue("@are", txtAre.Text.Trim());
+
+                        object result = cmdEmpleado.ExecuteScalar();
+                        if (result != null)
                         {
                             idEmpleado = Convert.ToInt32(result);
                         }
                     }
+
+                    if (idEmpleado == -1)
+                    {
+                        MessageBox.Show($"No se encontró empleado para ARE: {txtAre.Text.Trim()}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+
+                    MessageBox.Show("Empleado encontrado - ID: " + idEmpleado, "Debug");
+
+
+                    // 🔎 Insertar en la tabla folio
+                    string insertQuery = "INSERT INTO folio (id_folio, id_material_electoral, codigo_articulo, id_empleados, numeral_material_electoral) " +
+                                         "VALUES (@folio, @idMaterial, @codigo, @idEmpleado, @numeral)";
+
+                    using (MySqlCommand cmdInsert = new MySqlCommand(insertQuery, conn))
+                    {
+                        cmdInsert.Parameters.AddWithValue("@folio", nuevoFolio);
+                        cmdInsert.Parameters.AddWithValue("@idMaterial", idMaterialElectoral);
+                        cmdInsert.Parameters.AddWithValue("@codigo", codigoArticulo);
+                        cmdInsert.Parameters.AddWithValue("@idEmpleado", idEmpleado);
+                        cmdInsert.Parameters.AddWithValue("@numeral", numeroMaterial);
+
+                        int filasAfectadas = cmdInsert.ExecuteNonQuery();
+                        if (filasAfectadas > 0)
+                        {
+                            MessageBox.Show("Folio guardado correctamente.", "Éxito");
+                        }
+                        else
+                        {
+                            MessageBox.Show("No se pudo guardar el folio.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                    }
                 }
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Error al obtener el ID del empleado: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            return idEmpleado;
         }
 
         private void GuardarFolioEnBD(int idFolio, int idMaterialElectoral, string codigoArticulo, int idEmpleado, string numeralMaterial)
@@ -387,6 +389,7 @@ namespace login_ine
             }
         }
 
-
+        
+       
     }
 }
