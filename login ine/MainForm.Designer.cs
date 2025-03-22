@@ -38,10 +38,6 @@
             this.Column8 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.btnImprimir = new System.Windows.Forms.Button();
             this.dgvArticulos = new System.Windows.Forms.DataGridView();
-            this.Column1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Column2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Column3 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Column4 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.btnLimpiar = new System.Windows.Forms.Button();
             this.btnAgregar = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
@@ -54,6 +50,10 @@
             this.txtZore = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.Entradas = new System.Windows.Forms.TabPage();
+            this.Codigo_Artículo = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.CIME = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.NumeralMaterial = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Column4 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tabControl1.SuspendLayout();
             this.Salidas.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvDatosGenerales)).BeginInit();
@@ -66,7 +66,7 @@
             this.tabControl1.Controls.Add(this.Salidas);
             this.tabControl1.Controls.Add(this.Entradas);
             this.tabControl1.Location = new System.Drawing.Point(5, 3);
-            this.tabControl1.Margin = new System.Windows.Forms.Padding(2);
+            this.tabControl1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
             this.tabControl1.Size = new System.Drawing.Size(895, 611);
@@ -83,9 +83,9 @@
             this.Salidas.Controls.Add(this.btnAgregar);
             this.Salidas.Controls.Add(this.groupBox1);
             this.Salidas.Location = new System.Drawing.Point(4, 22);
-            this.Salidas.Margin = new System.Windows.Forms.Padding(2);
+            this.Salidas.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.Salidas.Name = "Salidas";
-            this.Salidas.Padding = new System.Windows.Forms.Padding(2);
+            this.Salidas.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.Salidas.Size = new System.Drawing.Size(887, 585);
             this.Salidas.TabIndex = 0;
             this.Salidas.Text = "Salidas";
@@ -145,7 +145,7 @@
             // 
             this.btnImprimir.Font = new System.Drawing.Font("Arial Rounded MT Bold", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnImprimir.Location = new System.Drawing.Point(10, 224);
-            this.btnImprimir.Margin = new System.Windows.Forms.Padding(2);
+            this.btnImprimir.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.btnImprimir.Name = "btnImprimir";
             this.btnImprimir.Size = new System.Drawing.Size(76, 27);
             this.btnImprimir.TabIndex = 4;
@@ -159,47 +159,23 @@
             this.dgvArticulos.BackgroundColor = System.Drawing.Color.Tan;
             this.dgvArticulos.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgvArticulos.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.Column1,
-            this.Column2,
-            this.Column3,
+            this.Codigo_Artículo,
+            this.CIME,
+            this.NumeralMaterial,
             this.Column4});
             this.dgvArticulos.Location = new System.Drawing.Point(223, 76);
-            this.dgvArticulos.Margin = new System.Windows.Forms.Padding(2);
+            this.dgvArticulos.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.dgvArticulos.Name = "dgvArticulos";
             this.dgvArticulos.RowHeadersWidth = 51;
             this.dgvArticulos.RowTemplate.Height = 24;
             this.dgvArticulos.Size = new System.Drawing.Size(629, 278);
             this.dgvArticulos.TabIndex = 3;
             // 
-            // Column1
-            // 
-            this.Column1.HeaderText = "Codigo_Artículo";
-            this.Column1.MinimumWidth = 6;
-            this.Column1.Name = "Column1";
-            // 
-            // Column2
-            // 
-            this.Column2.HeaderText = "CIME";
-            this.Column2.MinimumWidth = 6;
-            this.Column2.Name = "Column2";
-            // 
-            // Column3
-            // 
-            this.Column3.HeaderText = "Número";
-            this.Column3.MinimumWidth = 6;
-            this.Column3.Name = "Column3";
-            // 
-            // Column4
-            // 
-            this.Column4.HeaderText = "Nombre";
-            this.Column4.MinimumWidth = 6;
-            this.Column4.Name = "Column4";
-            // 
             // btnLimpiar
             // 
             this.btnLimpiar.Font = new System.Drawing.Font("Arial Rounded MT Bold", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnLimpiar.Location = new System.Drawing.Point(8, 194);
-            this.btnLimpiar.Margin = new System.Windows.Forms.Padding(2);
+            this.btnLimpiar.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.btnLimpiar.Name = "btnLimpiar";
             this.btnLimpiar.Size = new System.Drawing.Size(78, 27);
             this.btnLimpiar.TabIndex = 2;
@@ -211,7 +187,7 @@
             // 
             this.btnAgregar.Font = new System.Drawing.Font("Arial Rounded MT Bold", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnAgregar.Location = new System.Drawing.Point(8, 164);
-            this.btnAgregar.Margin = new System.Windows.Forms.Padding(2);
+            this.btnAgregar.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.btnAgregar.Name = "btnAgregar";
             this.btnAgregar.Size = new System.Drawing.Size(78, 27);
             this.btnAgregar.TabIndex = 1;
@@ -230,9 +206,9 @@
             this.groupBox1.Controls.Add(this.txtZore);
             this.groupBox1.Controls.Add(this.label1);
             this.groupBox1.Location = new System.Drawing.Point(8, 5);
-            this.groupBox1.Margin = new System.Windows.Forms.Padding(2);
+            this.groupBox1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Padding = new System.Windows.Forms.Padding(2);
+            this.groupBox1.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.groupBox1.Size = new System.Drawing.Size(170, 140);
             this.groupBox1.TabIndex = 0;
             this.groupBox1.TabStop = false;
@@ -241,7 +217,7 @@
             // txtArticulos
             // 
             this.txtArticulos.Location = new System.Drawing.Point(54, 111);
-            this.txtArticulos.Margin = new System.Windows.Forms.Padding(2);
+            this.txtArticulos.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.txtArticulos.Name = "txtArticulos";
             this.txtArticulos.Size = new System.Drawing.Size(109, 20);
             this.txtArticulos.TabIndex = 8;
@@ -251,7 +227,7 @@
             // txtNombre
             // 
             this.txtNombre.Location = new System.Drawing.Point(54, 83);
-            this.txtNombre.Margin = new System.Windows.Forms.Padding(2);
+            this.txtNombre.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.txtNombre.Name = "txtNombre";
             this.txtNombre.Size = new System.Drawing.Size(109, 20);
             this.txtNombre.TabIndex = 7;
@@ -260,7 +236,7 @@
             // txtAre
             // 
             this.txtAre.Location = new System.Drawing.Point(54, 55);
-            this.txtAre.Margin = new System.Windows.Forms.Padding(2);
+            this.txtAre.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.txtAre.Name = "txtAre";
             this.txtAre.Size = new System.Drawing.Size(109, 20);
             this.txtAre.TabIndex = 6;
@@ -302,7 +278,7 @@
             // txtZore
             // 
             this.txtZore.Location = new System.Drawing.Point(54, 24);
-            this.txtZore.Margin = new System.Windows.Forms.Padding(2);
+            this.txtZore.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.txtZore.Name = "txtZore";
             this.txtZore.Size = new System.Drawing.Size(109, 20);
             this.txtZore.TabIndex = 2;
@@ -322,13 +298,37 @@
             // Entradas
             // 
             this.Entradas.Location = new System.Drawing.Point(4, 22);
-            this.Entradas.Margin = new System.Windows.Forms.Padding(2);
+            this.Entradas.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.Entradas.Name = "Entradas";
-            this.Entradas.Padding = new System.Windows.Forms.Padding(2);
+            this.Entradas.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.Entradas.Size = new System.Drawing.Size(887, 585);
             this.Entradas.TabIndex = 1;
             this.Entradas.Text = "Entradas";
             this.Entradas.UseVisualStyleBackColor = true;
+            // 
+            // Codigo_Artículo
+            // 
+            this.Codigo_Artículo.HeaderText = "Codigo_Artículo";
+            this.Codigo_Artículo.MinimumWidth = 6;
+            this.Codigo_Artículo.Name = "Codigo_Artículo";
+            // 
+            // CIME
+            // 
+            this.CIME.HeaderText = "CIME";
+            this.CIME.MinimumWidth = 6;
+            this.CIME.Name = "CIME";
+            // 
+            // NumeralMaterial
+            // 
+            this.NumeralMaterial.HeaderText = "Número";
+            this.NumeralMaterial.MinimumWidth = 6;
+            this.NumeralMaterial.Name = "NumeralMaterial";
+            // 
+            // Column4
+            // 
+            this.Column4.HeaderText = "Nombre";
+            this.Column4.MinimumWidth = 6;
+            this.Column4.Name = "Column4";
             // 
             // MainForm
             // 
@@ -336,7 +336,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(898, 609);
             this.Controls.Add(this.tabControl1);
-            this.Margin = new System.Windows.Forms.Padding(2);
+            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.Name = "MainForm";
             this.Text = "MainForm";
             this.tabControl1.ResumeLayout(false);
@@ -367,15 +367,15 @@
         private System.Windows.Forms.TextBox txtZore;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button btnImprimir;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Column1;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Column2;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Column3;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Column4;
         private System.Windows.Forms.DataGridView dgvDatosGenerales;
         private System.Windows.Forms.DataGridViewTextBoxColumn Column5;
         private System.Windows.Forms.DataGridViewTextBoxColumn Column6;
         private System.Windows.Forms.DataGridViewTextBoxColumn Column7;
         private System.Windows.Forms.DataGridViewTextBoxColumn Column8;
         private System.Windows.Forms.Button btnGuardarFolio;
+        private System.Windows.Forms.DataGridViewTextBoxColumn Codigo_Artículo;
+        private System.Windows.Forms.DataGridViewTextBoxColumn CIME;
+        private System.Windows.Forms.DataGridViewTextBoxColumn NumeralMaterial;
+        private System.Windows.Forms.DataGridViewTextBoxColumn Column4;
     }
 }
