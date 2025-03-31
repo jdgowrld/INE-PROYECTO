@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Text.RegularExpressions;
 using System.Drawing.Printing;
+using System.Data.SqlClient;
 
 namespace login_ine
 {
@@ -19,10 +20,11 @@ namespace login_ine
         {
             InitializeComponent();
         }
+
+        private static string conexionString = "Server=localhost;Port=3306;Database=ine;User Id=root;Password=21082007jd;";
+
         public static class ConexionMySQL
         {
-            private static string conexionString = "Server=localhost;Port=3306;Database=ine;User Id=root;Password=21082007jd;";
-
             public static string ObtenerDescripcionDesdeBD(string cime)
             {
                 string descripcion = string.Empty;
@@ -123,6 +125,7 @@ namespace login_ine
             txtNombre.Clear();
             txtArticulos.Clear();
             dgvArticulos.Rows.Clear();
+            dgvDatosGenerales.Rows.Clear();
         }
 
         private void GuardarDatosGenerales()
@@ -187,45 +190,61 @@ namespace login_ine
         private void PrintDocument_PrintPage(object sender, PrintPageEventArgs e)
         {
             Font font = new Font("Arial", 10);
+            Font boldFont = new Font("Arial", 10, FontStyle.Bold);
             float yPos = 50;
             int xPos = 50;
 
-            e.Graphics.DrawString("Datos Generales", new Font("Arial", 12, FontStyle.Bold), Brushes.Black, xPos, yPos);
+            // Encabezado
+            e.Graphics.DrawString("RECIBO DE MATERIAL ELECTORAL", new Font("Arial", 14, FontStyle.Bold), Brushes.Black, xPos, yPos);
             yPos += 30;
 
-            // Imprimir dgvDatosGenerales
-            foreach (DataGridViewRow row in dgvDatosGenerales.Rows)
-            {
-                if (!row.IsNewRow)
-                {
-                    string line = "";
-                    foreach (DataGridViewCell cell in row.Cells)
-                    {
-                        line += cell.Value?.ToString() + "   ";
-                    }
-                    e.Graphics.DrawString(line, font, Brushes.Black, xPos, yPos);
-                    yPos += 20;
-                }
-            }
+            // Datos Generales
+            e.Graphics.DrawString("ZORE:", boldFont, Brushes.Black, xPos, yPos);
+            e.Graphics.DrawString(dgvDatosGenerales.Rows[0].Cells[0].Value?.ToString(), font, Brushes.Black, xPos + 50, yPos);
 
-            yPos += 30;
-            e.Graphics.DrawString("Artículos", new Font("Arial", 12, FontStyle.Bold), Brushes.Black, xPos, yPos);
-            yPos += 30;
+            e.Graphics.DrawString("ARE:", boldFont, Brushes.Black, xPos + 150, yPos);
+            e.Graphics.DrawString(dgvDatosGenerales.Rows[0].Cells[1].Value?.ToString(), font, Brushes.Black, xPos + 200, yPos);
 
-            // Imprimir dgvArticulos
+            e.Graphics.DrawString("Nombre:", boldFont, Brushes.Black, xPos + 300, yPos);
+            e.Graphics.DrawString(dgvDatosGenerales.Rows[0].Cells[2].Value?.ToString(), font, Brushes.Black, xPos + 370, yPos);
+
+            e.Graphics.DrawString("Fecha:", boldFont, Brushes.Black, xPos + 500, yPos);
+            e.Graphics.DrawString(DateTime.Now.ToShortDateString(), font, Brushes.Black, xPos + 550, yPos);
+
+            yPos += 40;
+
+            // Encabezado de artículos
+            e.Graphics.DrawString("Código Artículo", boldFont, Brushes.Black, xPos, yPos);
+            e.Graphics.DrawString("CIME", boldFont, Brushes.Black, xPos + 150, yPos);
+            e.Graphics.DrawString("Número", boldFont, Brushes.Black, xPos + 300, yPos);
+            e.Graphics.DrawString("Nombre", boldFont, Brushes.Black, xPos + 400, yPos);
+
+            yPos += 20;
+
+            // Imprimir Artículos
             foreach (DataGridViewRow row in dgvArticulos.Rows)
             {
                 if (!row.IsNewRow)
                 {
-                    string line = "";
-                    foreach (DataGridViewCell cell in row.Cells)
-                    {
-                        line += cell.Value?.ToString() + "   ";
-                    }
-                    e.Graphics.DrawString(line, font, Brushes.Black, xPos, yPos);
+                    e.Graphics.DrawString(row.Cells["Codigo_Artículo"].Value?.ToString(), font, Brushes.Black, xPos, yPos);
+                    e.Graphics.DrawString(row.Cells["CIME"].Value?.ToString(), font, Brushes.Black, xPos + 150, yPos);
+                    e.Graphics.DrawString(row.Cells["NumeralMaterial"].Value?.ToString(), font, Brushes.Black, xPos + 300, yPos);
+                    e.Graphics.DrawString(row.Cells["Column4"].Value?.ToString(), font, Brushes.Black, xPos + 400, yPos);
                     yPos += 20;
                 }
             }
+
+            yPos += 40; // Espacio antes de la firma
+
+            // Línea de firma
+            e.Graphics.DrawLine(Pens.Black, xPos, yPos, xPos + 300, yPos);
+            e.Graphics.DrawString("Firma de quien recibe", font, Brushes.Black, xPos + 50, yPos + 5);
+
+            yPos += 40;
+
+            // Línea para el nombre
+            e.Graphics.DrawLine(Pens.Black, xPos, yPos, xPos + 300, yPos);
+            e.Graphics.DrawString("Nombre de quien recibe", font, Brushes.Black, xPos + 50, yPos + 5);
         }
 
         private void btnImprimir_Click(object sender, EventArgs e)
@@ -340,5 +359,120 @@ namespace login_ine
             }
         }
 
+
+        private void btnCargarFolio_Click_1(object sender, EventArgs e)
+        {
+            CargarArticulos();
+        }
+
+        private void CargarArticulos()
+        {
+            dgvEntradas.Rows.Clear();
+            int contador = 0; // Para contar los resultados
+
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection("Server=localhost;Port=3306;Database=ine;User Id=root;Password=21082007jd;"))
+                {
+                    string query = @"SELECT f.codigo_articulo, me.cime, me.material_electoral 
+                            FROM folio f
+                            JOIN material_electoral me ON f.id_material_electoral = me.id_material_electoral
+                            WHERE f.numero_folio = @numero_folio";
+
+                    MySqlCommand cmd = new MySqlCommand(query, conn);
+                    cmd.Parameters.AddWithValue("@numero_folio", txtFolio.Text.Trim());
+
+                    conn.Open();
+                    MySqlDataReader reader = cmd.ExecuteReader();
+
+                    while (reader.Read())
+                    {
+                        dgvEntradas.Rows.Add(reader["codigo_articulo"].ToString(),
+                                              reader["cime"].ToString(),
+                                              reader["material_electoral"].ToString(),
+                                              "Pendiente");
+                        contador++;
+                    }
+                    reader.Close();
+                }
+                MessageBox.Show($"Se encontraron {contador} artículos.", "Información", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al cargar los artículos: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+
+
+        private void txtEscaner_TextChanged_1(object sender, EventArgs e)
+        {
+            if (txtEscaner.Text.Length < 3) return;  // Evita leer si el código es muy corto
+
+            string codigo = txtEscaner.Text.Trim();
+            foreach (DataGridViewRow row in dgvEntradas.Rows)
+            {
+                if (row.Cells["codigo_articulo"].Value != null &&
+                    row.Cells["codigo_articulo"].Value.ToString() == codigo &&
+                    row.Cells["estado"].Value.ToString() == "Pendiente")
+                {
+                    row.Cells["estado"].Value = "Recibido";
+                    row.DefaultCellStyle.BackColor = System.Drawing.Color.LightGreen;
+                    RegistrarEntrada(codigo);
+                    txtEscaner.Clear();
+                    return;
+                }
+            }
+
+            MessageBox.Show("Código no encontrado o ya registrado.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            txtEscaner.Clear();
+        }
+
+        private void RegistrarEntrada(string codigoArticulo)
+        {
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection("Server=localhost;Port=3306;Database=ine;User Id=root;Password=21082007jd;"))
+                {
+                    string query = "UPDATE folio SET recibido = 1 WHERE codigo_articulo = @codigo_articulo";
+                    MySqlCommand cmd = new MySqlCommand(query, conn);
+                    cmd.Parameters.AddWithValue("@codigo_articulo", codigoArticulo);
+
+                    conn.Open();
+                    cmd.ExecuteNonQuery();
+                }
+                VerificarFinalizacion();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al actualizar la base de datos: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void VerificarFinalizacion()
+        {
+            foreach (DataGridViewRow row in dgvEntradas.Rows)
+            {
+                if (row.Cells["estado"].Value.ToString() == "Pendiente")
+                {
+                    return;
+                }
+            }
+            MessageBox.Show("Todos los artículos han sido recibidos.", "Completado", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+
+        private void txtFolio_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnRegistrarEntrada_Click(object sender, EventArgs e)
+        {
+
+        }
+
+      
     }
 }
+    
