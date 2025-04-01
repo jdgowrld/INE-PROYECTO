@@ -19,9 +19,13 @@ namespace login_ine
         public MainForm()
         {
             InitializeComponent();
+            printDocumentSalidas.PrintPage += new PrintPageEventHandler(PrintDocumentSalida_PrintPage);
+
         }
 
         private static string conexionString = "Server=localhost;Port=3306;Database=ine;User Id=root;Password=21082007jd;";
+        private PrintDocument printDocumentSalidas = new PrintDocument();
+
 
         public static class ConexionMySQL
         {
@@ -195,7 +199,7 @@ namespace login_ine
             int xPos = 50;
 
             // Encabezado
-            e.Graphics.DrawString("RECIBO DE MATERIAL ELECTORAL", new Font("Arial", 14, FontStyle.Bold), Brushes.Black, xPos, yPos);
+            e.Graphics.DrawString("SALIDA DE MATERIAL ELECTORAL", new Font("Arial", 14, FontStyle.Bold), Brushes.Black, xPos, yPos);
             yPos += 30;
 
             // Datos Generales
@@ -234,17 +238,16 @@ namespace login_ine
                 }
             }
 
-            yPos += 40; // Espacio antes de la firma
+            float firmaY = e.MarginBounds.Bottom - 80; // Ajuste para ponerla al final
+            float nombreY = firmaY + 40; // Espacio entre firma y nombre
 
             // Línea de firma
-            e.Graphics.DrawLine(Pens.Black, xPos, yPos, xPos + 300, yPos);
-            e.Graphics.DrawString("Firma de quien recibe", font, Brushes.Black, xPos + 50, yPos + 5);
-
-            yPos += 40;
+            e.Graphics.DrawLine(Pens.Black, xPos, firmaY, xPos + 300, firmaY);
+            e.Graphics.DrawString("Firma de quien recibe", font, Brushes.Black, xPos + 50, firmaY + 5);
 
             // Línea para el nombre
-            e.Graphics.DrawLine(Pens.Black, xPos, yPos, xPos + 300, yPos);
-            e.Graphics.DrawString("Nombre de quien recibe", font, Brushes.Black, xPos + 50, yPos + 5);
+            e.Graphics.DrawLine(Pens.Black, xPos, nombreY, xPos + 300, nombreY);
+            e.Graphics.DrawString("Nombre de quien recibe", font, Brushes.Black, xPos + 50, nombreY + 5);
         }
 
         private void btnImprimir_Click(object sender, EventArgs e)
@@ -368,16 +371,16 @@ namespace login_ine
         private void CargarArticulos()
         {
             dgvEntradas.Rows.Clear();
-            int contador = 0; // Para contar los resultados
+            int contador = 0; // Contador para mostrar cuántos artículos se encontraron
 
             try
             {
                 using (MySqlConnection conn = new MySqlConnection("Server=localhost;Port=3306;Database=ine;User Id=root;Password=21082007jd;"))
                 {
-                    string query = @"SELECT f.codigo_articulo, me.cime, me.material_electoral 
-                            FROM folio f
-                            JOIN material_electoral me ON f.id_material_electoral = me.id_material_electoral
-                            WHERE f.numero_folio = @numero_folio";
+                    string query = @"SELECT f.codigo_articulo, me.cime, me.material_electoral, f.recibido
+                    FROM folio f
+                    JOIN material_electoral me ON f.id_material_electoral = me.id_material_electoral
+                    WHERE f.numero_folio = @numero_folio";
 
                     MySqlCommand cmd = new MySqlCommand(query, conn);
                     cmd.Parameters.AddWithValue("@numero_folio", txtFolio.Text.Trim());
@@ -387,11 +390,21 @@ namespace login_ine
 
                     while (reader.Read())
                     {
-                        dgvEntradas.Rows.Add(reader["codigo_articulo"].ToString(),
-                                              reader["cime"].ToString(),
-                                              reader["material_electoral"].ToString(),
-                                              "Pendiente");
+                        // Verificar si ya está recibido
+                        bool recibido = Convert.ToBoolean(reader["recibido"]);
+                        string estado = recibido ? "Recibido" : "Pendiente";
+
+                        int rowIndex = dgvEntradas.Rows.Add(reader["codigo_articulo"].ToString(),
+                                                            reader["cime"].ToString(),
+                                                            reader["material_electoral"].ToString(),
+                                                            estado);
                         contador++;
+
+                        // Si ya está recibido, cambiar color de la fila
+                        if (recibido)
+                        {
+                            dgvEntradas.Rows[rowIndex].DefaultCellStyle.BackColor = System.Drawing.Color.LightGreen;
+                        }
                     }
                     reader.Close();
                 }
@@ -403,11 +416,9 @@ namespace login_ine
             }
         }
 
-
-
         private void txtEscaner_TextChanged_1(object sender, EventArgs e)
         {
-            if (txtEscaner.Text.Length < 3) return;  // Evita leer si el código es muy corto
+            if (txtEscaner.Text.Length < 3) return; // Evita leer si el código es muy corto
 
             string codigo = txtEscaner.Text.Trim();
             foreach (DataGridViewRow row in dgvEntradas.Rows)
@@ -434,12 +445,18 @@ namespace login_ine
             {
                 using (MySqlConnection conn = new MySqlConnection("Server=localhost;Port=3306;Database=ine;User Id=root;Password=21082007jd;"))
                 {
-                    string query = "UPDATE folio SET recibido = 1 WHERE codigo_articulo = @codigo_articulo";
+                    // Solo actualizar si recibido = 0
+                    string query = "UPDATE folio SET recibido = 1 WHERE codigo_articulo = @codigo_articulo AND recibido = 0";
                     MySqlCommand cmd = new MySqlCommand(query, conn);
                     cmd.Parameters.AddWithValue("@codigo_articulo", codigoArticulo);
 
                     conn.Open();
-                    cmd.ExecuteNonQuery();
+                    int filasAfectadas = cmd.ExecuteNonQuery();
+
+                    if (filasAfectadas == 0)
+                    {
+                        MessageBox.Show("El artículo ya estaba marcado como recibido.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    }
                 }
                 VerificarFinalizacion();
             }
@@ -453,26 +470,76 @@ namespace login_ine
         {
             foreach (DataGridViewRow row in dgvEntradas.Rows)
             {
-                if (row.Cells["estado"].Value.ToString() == "Pendiente")
+                if (row.Cells["estado"].Value != null && row.Cells["estado"].Value.ToString() == "Pendiente")
                 {
-                    return;
+                    return; // Si hay al menos un pendiente, aún no está finalizado
                 }
             }
             MessageBox.Show("Todos los artículos han sido recibidos.", "Completado", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
-
-        private void txtFolio_TextChanged(object sender, EventArgs e)
+        private void btnclean_Click(object sender, EventArgs e)
         {
-
+            dgvEntradas.Rows.Clear();
+            txtFolio.Clear();
+            txtEscaner.Clear();
         }
 
-        private void btnRegistrarEntrada_Click(object sender, EventArgs e)
+        private void PrintDocumentSalida_PrintPage(object sender, PrintPageEventArgs e)
         {
+            Font font = new Font("Arial", 10);
+            Font boldFont = new Font("Arial", 10, FontStyle.Bold);
+            float yPos = 50;
+            int xPos = 50;
 
+            // Encabezado
+            e.Graphics.DrawString("RECIBO DE MATERIAL ELECTORAL", new Font("Arial", 14, FontStyle.Bold), Brushes.Black, xPos, yPos);
+            yPos += 30;
+
+            // Encabezado de artículos
+            e.Graphics.DrawString("Código Artículo", boldFont, Brushes.Black, xPos, yPos);
+            e.Graphics.DrawString("CIME", boldFont, Brushes.Black, xPos + 150, yPos);
+            e.Graphics.DrawString("Material Electoral", boldFont, Brushes.Black, xPos + 300, yPos);
+            e.Graphics.DrawString("Estado", boldFont, Brushes.Black, xPos + 550, yPos); // Movido más a la derecha
+
+            yPos += 20;
+
+            // Imprimir Artículos desde dgvEntradas
+            foreach (DataGridViewRow row in dgvEntradas.Rows)
+            {
+                if (!row.IsNewRow)
+                {
+                    e.Graphics.DrawString(row.Cells["codigo_articulo"].Value?.ToString(), font, Brushes.Black, xPos, yPos);
+                    e.Graphics.DrawString(row.Cells["cime_entradas"].Value?.ToString(), font, Brushes.Black, xPos + 150, yPos);
+                    e.Graphics.DrawString(row.Cells["material_electoral"].Value?.ToString(), font, Brushes.Black, xPos + 300, yPos);
+                    e.Graphics.DrawString(row.Cells["estado"].Value?.ToString(), font, Brushes.Black, xPos + 550, yPos); // Movido más a la derecha
+                    yPos += 20;
+                }
+            }
+
+            // Ubicar la firma hasta el final de la hoja
+            float firmaY = e.MarginBounds.Bottom - 80; // Ajuste para ponerla al final
+            float nombreY = firmaY + 40; // Espacio entre firma y nombre
+
+            // Línea de firma
+            e.Graphics.DrawLine(Pens.Black, xPos, firmaY, xPos + 300, firmaY);
+            e.Graphics.DrawString("Firma de quien recibe", font, Brushes.Black, xPos + 50, firmaY + 5);
+
+            // Línea para el nombre
+            e.Graphics.DrawLine(Pens.Black, xPos, nombreY, xPos + 300, nombreY);
+            e.Graphics.DrawString("Nombre de quien recibe", font, Brushes.Black, xPos + 50, nombreY + 5);
         }
 
-      
+        private void btnImprimirSalida_Click(object sender, EventArgs e)
+        {
+            PrintDialog printDialog = new PrintDialog();
+            printDialog.Document = printDocumentSalidas;
+
+            if (printDialog.ShowDialog() == DialogResult.OK)
+            {
+                printDocumentSalidas.Print();
+            }
+        }
     }
 }
     
