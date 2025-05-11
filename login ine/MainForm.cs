@@ -19,13 +19,12 @@ namespace login_ine
         public MainForm()
         {
             InitializeComponent();
-            printDocumentSalidas.PrintPage += new PrintPageEventHandler(PrintDocumentSalida_PrintPage);
-
+            printDocumentSalidas.PrintPage += new PrintPageEventHandler(PrintDocumentSalidas_PrintPage);
+            printDocumentEntradas.PrintPage += new PrintPageEventHandler(PrintDocumentEntradas_PrintPage);
         }
-
         private static string conexionString = "Server=localhost;Port=3306;Database=ine;User Id=root;Password=21082007jd;";
-        private PrintDocument printDocumentSalidas = new PrintDocument();
-
+        PrintDocument printDocumentSalidas = new PrintDocument();
+        PrintDocument printDocumentEntradas = new PrintDocument();
 
         public static class ConexionMySQL
         {
@@ -79,7 +78,6 @@ namespace login_ine
                 return cime; // Si no tiene la longitud correcta, devolverlo como está
             }
         }
-
         private void txtZore_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
@@ -88,7 +86,6 @@ namespace login_ine
                 e.SuppressKeyPress = true;
             }
         }
-
         private void txtAre_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
@@ -97,7 +94,6 @@ namespace login_ine
                 e.SuppressKeyPress = true;
             }
         }
-
         private void txtNombre_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
@@ -106,7 +102,6 @@ namespace login_ine
                 e.SuppressKeyPress = true;
             }
         }
-
         private void txtArticulos_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
@@ -115,13 +110,11 @@ namespace login_ine
                 e.SuppressKeyPress = true;
             }
         }
-
         private void btnAgregar_Click(object sender, EventArgs e)
         {
             GuardarDatosGenerales(); // Se encarga de validar y limpiar los campos
             AgregarArticulo(); // Agrega el artículo
         }
-
         private void btnLimpiar_Click(object sender, EventArgs e)
         {
             txtZore.Clear();
@@ -131,7 +124,6 @@ namespace login_ine
             dgvArticulos.Rows.Clear();
             dgvDatosGenerales.Rows.Clear();
         }
-
         private void GuardarDatosGenerales()
         {
             string zore = txtZore.Text.Trim();
@@ -147,7 +139,6 @@ namespace login_ine
             dgvDatosGenerales.Rows.Clear();
             dgvDatosGenerales.Rows.Add(new object[] { zore, are, nombre, fecha });
         }
-
         private void AgregarArticulo()
         {
             string codigo = txtArticulos.Text.Trim();
@@ -190,81 +181,108 @@ namespace login_ine
                 MessageBox.Show("Formato de código incorrecto. Intente nuevamente.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
-        private void PrintDocument_PrintPage(object sender, PrintPageEventArgs e)
+        private void PrintDocumentSalidas_PrintPage(object sender, PrintPageEventArgs e)
         {
-            Font font = new Font("Arial", 10);
-            Font boldFont = new Font("Arial", 10, FontStyle.Bold);
-            float yPos = 50;
-            int xPos = 50;
+            Font font = new Font("Arial", 9);
+            Font boldFont = new Font("Arial", 9, FontStyle.Bold);
+            Font headerFont = new Font("Arial", 13, FontStyle.Bold);
+            Font tituloTabla = new Font("Arial", 9, FontStyle.Bold);
 
-            // Encabezado
-            e.Graphics.DrawString("SALIDA DE MATERIAL ELECTORAL", new Font("Arial", 14, FontStyle.Bold), Brushes.Black, xPos, yPos);
-            yPos += 30;
+            int leftMargin = 50;
+            int topMargin = 50;
+            int rowHeight = 25;
+            float yPos = topMargin;
 
-            // Datos Generales
-            e.Graphics.DrawString("ZORE:", boldFont, Brushes.Black, xPos, yPos);
-            e.Graphics.DrawString(dgvDatosGenerales.Rows[0].Cells[0].Value?.ToString(), font, Brushes.Black, xPos + 50, yPos);
-
-            e.Graphics.DrawString("ARE:", boldFont, Brushes.Black, xPos + 150, yPos);
-            e.Graphics.DrawString(dgvDatosGenerales.Rows[0].Cells[1].Value?.ToString(), font, Brushes.Black, xPos + 200, yPos);
-
-            e.Graphics.DrawString("Nombre:", boldFont, Brushes.Black, xPos + 300, yPos);
-            e.Graphics.DrawString(dgvDatosGenerales.Rows[0].Cells[2].Value?.ToString(), font, Brushes.Black, xPos + 370, yPos);
-
-            e.Graphics.DrawString("Fecha:", boldFont, Brushes.Black, xPos + 500, yPos);
-            e.Graphics.DrawString(DateTime.Now.ToShortDateString(), font, Brushes.Black, xPos + 550, yPos);
-
+            // ENCABEZADO
+            e.Graphics.DrawString("SALIDA DE MATERIAL ELECTORAL", headerFont, Brushes.Black, leftMargin + 200, yPos);
             yPos += 40;
 
-            // Encabezado de artículos
-            e.Graphics.DrawString("Código Artículo", boldFont, Brushes.Black, xPos, yPos);
-            e.Graphics.DrawString("CIME", boldFont, Brushes.Black, xPos + 150, yPos);
-            e.Graphics.DrawString("Número", boldFont, Brushes.Black, xPos + 300, yPos);
-            e.Graphics.DrawString("Nombre", boldFont, Brushes.Black, xPos + 400, yPos);
+            // FOLIO Y FECHA
+            e.Graphics.FillRectangle(Brushes.LightGray, leftMargin, yPos, 700, rowHeight);
+            e.Graphics.DrawRectangle(Pens.Black, leftMargin, yPos, 700, rowHeight);
+            e.Graphics.DrawString("FOLIO:", boldFont, Brushes.Black, leftMargin + 10, yPos + 5);
+            e.Graphics.DrawString(txtFolio.Text, font, Brushes.Black, leftMargin + 60, yPos + 5);
+            e.Graphics.DrawString("FECHA:", boldFont, Brushes.Black, leftMargin + 500, yPos + 5);
+            e.Graphics.DrawString(DateTime.Now.ToString("dd/MM/yyyy"), font, Brushes.Black, leftMargin + 560, yPos + 5);
+            yPos += rowHeight;
 
-            yPos += 20;
+            // DATOS GENERALES (ZORE, ARE, NOMBRE)
+            foreach (DataGridViewRow row in dgvDatosGenerales.Rows)
+            {
+                if (!row.IsNewRow)
+                {
+                    e.Graphics.DrawString("ZORE:", boldFont, Brushes.Black, leftMargin + 10, yPos + 5);
+                    e.Graphics.DrawString(row.Cells["Column5"]?.Value?.ToString() ?? "", font, Brushes.Black, leftMargin + 60, yPos + 5);
 
-            // Imprimir Artículos
+                    e.Graphics.DrawString("ARE:", boldFont, Brushes.Black, leftMargin + 200, yPos + 5);
+                    e.Graphics.DrawString(row.Cells["Column6"]?.Value?.ToString() ?? "", font, Brushes.Black, leftMargin + 240, yPos + 5);
+
+                    e.Graphics.DrawString("Nombre:", boldFont, Brushes.Black, leftMargin + 400, yPos + 5);
+                    e.Graphics.DrawString(row.Cells["Column7"]?.Value?.ToString() ?? "", font, Brushes.Black, leftMargin + 460, yPos + 5);
+
+                    yPos += rowHeight + 10;
+                }
+            }
+
+            // CABECERA DE LA TABLA DE ARTÍCULOS
+            int[] colWidths = { 130, 130, 320, 100 };
+            string[] headers = { "Código de Artículo", "CIME", "Nombre", "Estado" };
+            int currentX = leftMargin;
+
+            for (int i = 0; i < headers.Length; i++)
+            {
+                e.Graphics.FillRectangle(Brushes.LightGray, currentX, yPos, colWidths[i], rowHeight);
+                e.Graphics.DrawRectangle(Pens.Black, currentX, yPos, colWidths[i], rowHeight);
+                e.Graphics.DrawString(headers[i], tituloTabla, Brushes.Black, currentX + 5, yPos + 5);
+                currentX += colWidths[i];
+            }
+
+            yPos += rowHeight;
+
+            // FILAS DEL dgvArticulos
             foreach (DataGridViewRow row in dgvArticulos.Rows)
             {
                 if (!row.IsNewRow)
                 {
-                    e.Graphics.DrawString(row.Cells["Codigo_Artículo"].Value?.ToString(), font, Brushes.Black, xPos, yPos);
-                    e.Graphics.DrawString(row.Cells["CIME"].Value?.ToString(), font, Brushes.Black, xPos + 150, yPos);
-                    e.Graphics.DrawString(row.Cells["NumeralMaterial"].Value?.ToString(), font, Brushes.Black, xPos + 300, yPos);
-                    e.Graphics.DrawString(row.Cells["Column4"].Value?.ToString(), font, Brushes.Black, xPos + 400, yPos);
-                    yPos += 20;
+                    currentX = leftMargin;
+
+                    string[] values = {
+                row.Cells["codigo_articulo"]?.Value?.ToString() ?? "",
+                row.Cells["cime"]?.Value?.ToString() ?? "",
+                row.Cells["material_electoral"]?.Value?.ToString() ?? "",
+                row.Cells["estado"]?.Value?.ToString() ?? ""
+            };
+
+                    for (int i = 0; i < values.Length; i++)
+                    {
+                        e.Graphics.DrawRectangle(Pens.Black, currentX, yPos, colWidths[i], rowHeight);
+                        e.Graphics.DrawString(values[i], font, Brushes.Black, currentX + 5, yPos + 5);
+                        currentX += colWidths[i];
+                    }
+
+                    yPos += rowHeight;
                 }
             }
 
-            float firmaY = e.MarginBounds.Bottom - 80; // Ajuste para ponerla al final
-            float nombreY = firmaY + 40; // Espacio entre firma y nombre
+            // FIRMA
+            float bottomY = e.MarginBounds.Bottom - 80;
+            e.Graphics.DrawLine(Pens.Black, leftMargin, bottomY, leftMargin + 300, bottomY);
+            e.Graphics.DrawString("Firma de quien entrega", font, Brushes.Black, leftMargin + 50, bottomY + 5);
 
-            // Línea de firma
-            e.Graphics.DrawLine(Pens.Black, xPos, firmaY, xPos + 300, firmaY);
-            e.Graphics.DrawString("Firma de quien recibe", font, Brushes.Black, xPos + 50, firmaY + 5);
-
-            // Línea para el nombre
-            e.Graphics.DrawLine(Pens.Black, xPos, nombreY, xPos + 300, nombreY);
-            e.Graphics.DrawString("Nombre de quien recibe", font, Brushes.Black, xPos + 50, nombreY + 5);
+            e.Graphics.DrawLine(Pens.Black, leftMargin + 350, bottomY, leftMargin + 650, bottomY);
+            e.Graphics.DrawString("Firma de quien recibe", font, Brushes.Black, leftMargin + 400, bottomY + 5);
         }
 
-        private void btnImprimir_Click(object sender, EventArgs e)
+        private void btnImprimirSalidas_Click_1(object sender, EventArgs e)
         {
             PrintDialog printDialog = new PrintDialog();
-            PrintDocument printDocument = new PrintDocument();
-
-            printDocument.PrintPage += new PrintPageEventHandler(PrintDocument_PrintPage);
-
-            printDialog.Document = printDocument;
+            printDialog.Document = printDocumentSalidas;
 
             if (printDialog.ShowDialog() == DialogResult.OK)
             {
-                printDocument.Print();
+                printDocumentSalidas.Print();
             }
         }
-
         private void btnGuardarFolio_Click_1(object sender, EventArgs e)
         {
             GuardarFolioEnBD();
@@ -321,7 +339,6 @@ namespace login_ine
                 MessageBox.Show("Error al guardar en la base de datos: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
         private int ObtenerNuevoIdFolio(MySqlConnection conn)
         {
             string query = "SELECT COALESCE(MAX(id_folio), 0) + 1 FROM folio";
@@ -330,7 +347,6 @@ namespace login_ine
                 return Convert.ToInt32(cmd.ExecuteScalar());
             }
         }
-
         private int ObtenerIdEmpleado(MySqlConnection conn, string are)
         {
             string query = "SELECT id_empleados FROM empleados WHERE ARE = @are";
@@ -341,7 +357,6 @@ namespace login_ine
                 return result != null ? Convert.ToInt32(result) : -1;
             }
         }
-
         private int ObtenerNuevoNumeroFolio(MySqlConnection conn)
         {
             string query = "SELECT COALESCE(MAX(numero_folio), 0) + 1 FROM folio";
@@ -350,7 +365,6 @@ namespace login_ine
                 return Convert.ToInt32(cmd.ExecuteScalar());
             }
         }
-
         private int ObtenerIdMaterialElectoral(MySqlConnection conn, string cime)
         {
             string query = "SELECT id_material_electoral FROM material_electoral WHERE cime = @cime LIMIT 1";
@@ -361,13 +375,10 @@ namespace login_ine
                 return result != null ? Convert.ToInt32(result) : -1; // Devuelve -1 si no se encuentra
             }
         }
-
-
         private void btnCargarFolio_Click_1(object sender, EventArgs e)
         {
             CargarArticulos();
         }
-
         private void CargarArticulos()
         {
             dgvEntradas.Rows.Clear();
@@ -408,37 +419,13 @@ namespace login_ine
                     }
                     reader.Close();
                 }
-                MessageBox.Show($"Se encontraron {contador} artículos.", "Información", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Error al cargar los artículos: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
-        private void txtEscaner_TextChanged_1(object sender, EventArgs e)
-        {
-            if (txtEscaner.Text.Length < 3) return; // Evita leer si el código es muy corto
-
-            string codigo = txtEscaner.Text.Trim();
-            foreach (DataGridViewRow row in dgvEntradas.Rows)
-            {
-                if (row.Cells["codigo_articulo"].Value != null &&
-                    row.Cells["codigo_articulo"].Value.ToString() == codigo &&
-                    row.Cells["estado"].Value.ToString() == "Pendiente")
-                {
-                    row.Cells["estado"].Value = "Recibido";
-                    row.DefaultCellStyle.BackColor = System.Drawing.Color.LightGreen;
-                    RegistrarEntrada(codigo);
-                    txtEscaner.Clear();
-                    return;
-                }
-            }
-
-            MessageBox.Show("Código no encontrado o ya registrado.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            txtEscaner.Clear();
-        }
-
+        
         private void RegistrarEntrada(string codigoArticulo)
         {
             try
@@ -465,7 +452,6 @@ namespace login_ine
                 MessageBox.Show("Error al actualizar la base de datos: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
         private void VerificarFinalizacion()
         {
             foreach (DataGridViewRow row in dgvEntradas.Rows)
@@ -477,7 +463,6 @@ namespace login_ine
             }
             MessageBox.Show("Todos los artículos han sido recibidos.", "Completado", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
-
         private void btnclean_Click(object sender, EventArgs e)
         {
             dgvEntradas.Rows.Clear();
@@ -485,61 +470,123 @@ namespace login_ine
             txtEscaner.Clear();
         }
 
-        private void PrintDocumentSalida_PrintPage(object sender, PrintPageEventArgs e)
+        private void PrintDocumentEntradas_PrintPage(object sender, PrintPageEventArgs e)
         {
-            Font font = new Font("Arial", 10);
-            Font boldFont = new Font("Arial", 10, FontStyle.Bold);
-            float yPos = 50;
-            int xPos = 50;
+            Font font = new Font("Arial", 9);
+            Font boldFont = new Font("Arial", 9, FontStyle.Bold);
+            Font headerFont = new Font("Arial", 13, FontStyle.Bold);
+            Font tituloTabla = new Font("Arial", 9, FontStyle.Bold);
 
-            // Encabezado
-            e.Graphics.DrawString("RECIBO DE MATERIAL ELECTORAL", new Font("Arial", 14, FontStyle.Bold), Brushes.Black, xPos, yPos);
-            yPos += 30;
+            int leftMargin = 50;
+            int topMargin = 50;
+            int rowHeight = 25;
+            float yPos = topMargin;
 
-            // Encabezado de artículos
-            e.Graphics.DrawString("Código Artículo", boldFont, Brushes.Black, xPos, yPos);
-            e.Graphics.DrawString("CIME", boldFont, Brushes.Black, xPos + 150, yPos);
-            e.Graphics.DrawString("Material Electoral", boldFont, Brushes.Black, xPos + 300, yPos);
-            e.Graphics.DrawString("Estado", boldFont, Brushes.Black, xPos + 550, yPos); // Movido más a la derecha
+            // ENCABEZADO PRINCIPAL
+            e.Graphics.DrawString("ENTRADA DE MATERIAL ELECTORAL", headerFont, Brushes.Black, leftMargin + 200, yPos);
+            yPos += 40;
 
-            yPos += 20;
+            // FOLIO Y FECHA
+            e.Graphics.FillRectangle(Brushes.LightGray, leftMargin, yPos, 700, rowHeight);
+            e.Graphics.DrawRectangle(Pens.Black, leftMargin, yPos, 700, rowHeight);
+            e.Graphics.DrawString("FOLIO:", boldFont, Brushes.Black, leftMargin + 10, yPos + 5);
+            e.Graphics.DrawString(txtFolio.Text, font, Brushes.Black, leftMargin + 60, yPos + 5);
+            e.Graphics.DrawString("FECHA:", boldFont, Brushes.Black, leftMargin + 500, yPos + 5);
+            e.Graphics.DrawString(DateTime.Now.ToString("dd/MM/yyyy"), font, Brushes.Black, leftMargin + 560, yPos + 5);
+            yPos += rowHeight + 20;
 
-            // Imprimir Artículos desde dgvEntradas
+            // CABECERA DE LA TABLA
+            int[] colWidths = { 130, 130, 320, 100 }; // Ajustadas a tu imagen
+            string[] headers = { "Código de Artículo", "CIME", "Nombre", "Estado" };
+            int currentX = leftMargin;
+
+            for (int i = 0; i < headers.Length; i++)
+            {
+                e.Graphics.FillRectangle(Brushes.LightGray, currentX, yPos, colWidths[i], rowHeight);
+                e.Graphics.DrawRectangle(Pens.Black, currentX, yPos, colWidths[i], rowHeight);
+                e.Graphics.DrawString(headers[i], tituloTabla, Brushes.Black, currentX + 5, yPos + 5);
+                currentX += colWidths[i];
+            }
+
+            yPos += rowHeight;
+
+            // FILAS DEL dgvEntradas
             foreach (DataGridViewRow row in dgvEntradas.Rows)
             {
                 if (!row.IsNewRow)
                 {
-                    e.Graphics.DrawString(row.Cells["codigo_articulo"].Value?.ToString(), font, Brushes.Black, xPos, yPos);
-                    e.Graphics.DrawString(row.Cells["cime_entradas"].Value?.ToString(), font, Brushes.Black, xPos + 150, yPos);
-                    e.Graphics.DrawString(row.Cells["material_electoral"].Value?.ToString(), font, Brushes.Black, xPos + 300, yPos);
-                    e.Graphics.DrawString(row.Cells["estado"].Value?.ToString(), font, Brushes.Black, xPos + 550, yPos); // Movido más a la derecha
-                    yPos += 20;
+                    currentX = leftMargin;
+
+                    string[] values = {
+                row.Cells["codigo_articulo"]?.Value?.ToString() ?? "",
+                row.Cells["cime_entradas"]?.Value?.ToString() ?? "",
+                row.Cells["material_electoral"]?.Value?.ToString() ?? "",
+                row.Cells["estado"]?.Value?.ToString() ?? ""
+            };
+
+                    for (int i = 0; i < values.Length; i++)
+                    {
+                        e.Graphics.DrawRectangle(Pens.Black, currentX, yPos, colWidths[i], rowHeight);
+                        e.Graphics.DrawString(values[i], font, Brushes.Black, currentX + 5, yPos + 5);
+                        currentX += colWidths[i];
+                    }
+
+                    yPos += rowHeight;
                 }
             }
 
-            // Ubicar la firma hasta el final de la hoja
-            float firmaY = e.MarginBounds.Bottom - 80; // Ajuste para ponerla al final
-            float nombreY = firmaY + 40; // Espacio entre firma y nombre
+            // FIRMA
+            float bottomY = e.MarginBounds.Bottom - 80;
+            e.Graphics.DrawLine(Pens.Black, leftMargin, bottomY, leftMargin + 300, bottomY);
+            e.Graphics.DrawString("Firma de quien entrega", font, Brushes.Black, leftMargin + 50, bottomY + 5);
 
-            // Línea de firma
-            e.Graphics.DrawLine(Pens.Black, xPos, firmaY, xPos + 300, firmaY);
-            e.Graphics.DrawString("Firma de quien recibe", font, Brushes.Black, xPos + 50, firmaY + 5);
-
-            // Línea para el nombre
-            e.Graphics.DrawLine(Pens.Black, xPos, nombreY, xPos + 300, nombreY);
-            e.Graphics.DrawString("Nombre de quien recibe", font, Brushes.Black, xPos + 50, nombreY + 5);
+            e.Graphics.DrawLine(Pens.Black, leftMargin + 350, bottomY, leftMargin + 650, bottomY);
+            e.Graphics.DrawString("Firma de quien recibe", font, Brushes.Black, leftMargin + 400, bottomY + 5);
         }
-
-        private void btnImprimirSalida_Click(object sender, EventArgs e)
+        private void btnImprimirEntradas_Click(object sender, EventArgs e)
         {
             PrintDialog printDialog = new PrintDialog();
-            printDialog.Document = printDocumentSalidas;
+            printDialog.Document = printDocumentEntradas;
 
             if (printDialog.ShowDialog() == DialogResult.OK)
             {
-                printDocumentSalidas.Print();
+                printDocumentEntradas.Print();
             }
         }
+
+        private void txtEscaner_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                string codigo = txtEscaner.Text.Trim();
+
+                if (codigo.Length < 3)
+                {
+                    txtEscaner.Clear();
+                    return;
+                }
+
+                foreach (DataGridViewRow row in dgvEntradas.Rows)
+                {
+                    if (row.Cells["codigo_articulo"].Value != null &&
+                        row.Cells["codigo_articulo"].Value.ToString() == codigo &&
+                        row.Cells["estado"].Value.ToString() == "Pendiente")
+                    {
+                        row.Cells["estado"].Value = "Recibido";
+                        row.DefaultCellStyle.BackColor = System.Drawing.Color.LightGreen;
+                        RegistrarEntrada(codigo);
+                        txtEscaner.Clear();
+                        return;
+                    }
+                }
+
+                MessageBox.Show("Código no encontrado o ya registrado.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                txtEscaner.Clear();
+            }
+        }
+
+        
     }
 }
+
     
