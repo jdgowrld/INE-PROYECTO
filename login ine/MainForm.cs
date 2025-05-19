@@ -226,7 +226,7 @@ namespace login_ine
 
             // CABECERA DE LA TABLA DE ARTÍCULOS
             int[] colWidths = { 130, 130, 320, 100 };
-            string[] headers = { "Código de Artículo", "CIME", "Nombre", "Estado" };
+            string[] headers = { "Código de Artículo", "CIME", "Numeral", "Nombre" };
             int currentX = leftMargin;
 
             for (int i = 0; i < headers.Length; i++)
@@ -247,10 +247,10 @@ namespace login_ine
                     currentX = leftMargin;
 
                     string[] values = {
-                row.Cells["codigo_articulo"]?.Value?.ToString() ?? "",
+                row.Cells["Codigo_Artículo"]?.Value?.ToString() ?? "",
                 row.Cells["cime"]?.Value?.ToString() ?? "",
-                row.Cells["material_electoral"]?.Value?.ToString() ?? "",
-                row.Cells["estado"]?.Value?.ToString() ?? ""
+                row.Cells["NumeralMaterial"]?.Value?.ToString() ?? "",
+                row.Cells["Column4"]?.Value?.ToString() ?? ""
             };
 
                     for (int i = 0; i < values.Length; i++)
